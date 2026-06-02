@@ -1,0 +1,17 @@
+services:
+  postgresdb:
+    image: postgres:17
+
+    ports:
+      - "5432:5432"
+
+    environment:
+      POSTGRES_USER: POSTGRES
+      POSTGRES_PASSWORD: POSTGRES
+      POSTGRES_DB: express-db
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
