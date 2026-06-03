@@ -1,5 +1,5 @@
 {
-  "id": "f4dbb053-f91c-4625-993e-8fcf9e65b3a6",
+  "id": "474f02b6-7187-4ce6-a8b5-9f21c6c21492",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -37,18 +37,26 @@
           "name": "is_verified",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "default": false
         },
         "password": {
           "name": "password",
-          "type": "varchar(66)",
+          "type": "varchar(100)",
           "primaryKey": false,
           "notNull": false
         },
-        "salt": {
-          "name": "salt",
-          "type": "text",
+        "role": {
+          "name": "role",
+          "type": "role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'user'"
+        },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": false
         },
@@ -83,7 +91,16 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.role": {
+      "name": "role",
+      "schema": "public",
+      "values": [
+        "user",
+        "admin"
+      ]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},
