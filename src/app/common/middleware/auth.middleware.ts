@@ -32,7 +32,7 @@ async function authenticate(req: Request, res: Response, next: NextFunction) {
     req.cookies.accessToken ?? req.headers.authorization?.split(" ")[1];
 
   if (!token) {
-    throw ApiError.notFound("Please log in to continue ");
+    throw ApiError.unauthorized("Please log in to continue ");
   }
 
   const decodedToken = verifyAccessToken(token);
@@ -58,7 +58,7 @@ async function authenticate(req: Request, res: Response, next: NextFunction) {
     );
 
   if (!user) {
-    throw ApiError.notFound("User account no longer exists");
+    throw ApiError.unauthorized("User account no longer exists");
   }
 
   req.user = user;
