@@ -16,11 +16,11 @@ const usersTable = pgTable("users", {
   lastName: varchar("last_name", { length: 50 }),
 
   email: varchar("email", { length: 322 }).notNull().unique(),
-  isVerfied: boolean("is_verified").default(false),
+  isVerified: boolean("is_verified").default(false),
 
   password: varchar("password", { length: 100 }),
 
-  role: userRoleEnum().default("user"),
+  role: userRoleEnum("role").default("user"),
 
   refreshToken: varchar("refresh_token"),
 

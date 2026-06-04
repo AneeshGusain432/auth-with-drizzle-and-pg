@@ -18,7 +18,7 @@ import {
   hashToken,
 } from "../../common/utils/generate.token.js";
 
-async function register(req: Request, res: Response) {
+async function register(req:Request, res:Response) {
   const body = registerValidationSchema.safeParse(req.body);
 
   if (body.error) {
@@ -52,15 +52,15 @@ async function register(req: Request, res: Response) {
       firstName: usersTable.firstName,
       lastName: usersTable.lastName,
       email: usersTable.email,
-      isVerified: usersTable.isVerfied,
+      isVerified: usersTable.isVerified,
       createdAt: usersTable.createdAt,
       updatedAt: usersTable.updatedAt,
     });
 
-  ApiResponse.created(res, "register successfully", { user: data });
+  ApiResponse.created(res, "Account created successfully", { user: data });
 }
 
-async function login(req: Request, res: Response) {
+async function login(req:Request, res:Response) {
   const body = loginValidationSchema.safeParse(req.body);
 
   if (body.error) {
@@ -98,7 +98,7 @@ async function login(req: Request, res: Response) {
       firstName: usersTable.firstName,
       lastName: usersTable.lastName,
       email: usersTable.email,
-      isVerified: usersTable.isVerfied,
+      isVerified: usersTable.isVerified,
       createdAt: usersTable.createdAt,
       updatedAt: usersTable.updatedAt,
     });
@@ -115,11 +115,20 @@ async function login(req: Request, res: Response) {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-  ApiResponse.ok(res, "logged in successfully", {
+  ApiResponse.ok(res, "Logged in successfully", {
     user: data,
     accessToken,
     refreshToken,
   });
 }
 
-export { register, login };
+
+async function logout(req:Request, res:Response) {
+  const user = req.user
+  await db.update(usersTable).set({refreshToken: ""}).where(eq(usersTable.id, user?.id!))
+  res.clearCookie("accessToken").clearCookie("refreshToken")
+
+  ApiResponse.ok(res, "Logged out successfully")
+}
+
+export { register, login, logout };
