@@ -7,7 +7,9 @@ CREATE TABLE "users" (
 	"is_verified" boolean DEFAULT false,
 	"password" varchar(100),
 	"role" "role" DEFAULT 'user',
+	"isDeleted" boolean DEFAULT false,
 	"refresh_token" varchar,
+	"verification_token" varchar,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp,
 	CONSTRAINT "users_email_unique" UNIQUE("email")

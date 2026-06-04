@@ -21,8 +21,10 @@ const usersTable = pgTable("users", {
   password: varchar("password", { length: 100 }),
 
   role: userRoleEnum("role").default("user"),
+  isDeleted: boolean().default(false),
 
   refreshToken: varchar("refresh_token"),
+  verificationToken: varchar("verification_token"),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),

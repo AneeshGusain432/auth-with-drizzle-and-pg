@@ -19,9 +19,6 @@ function generateRefreshToken(payload: TokenPayload) {
   });
 }
 
-async function hashToken(token: string) {
-  return crypto.createHash("sha256").update(token).digest("hex");
-}
 
 function verifyAccessToken(token: string): TokenPayload {
   try {
@@ -45,10 +42,25 @@ function verifyRefreshToken(token: string): TokenPayload {
   }
 }
 
+
+async function hashToken(token: string) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+
+function generateVerificationToken() {
+  const rawVerificationToken =  crypto.randomBytes(32).toString("hex")
+  const hashVerificationToken =  crypto.createHash("sha256").update(rawVerificationToken).digest("hex")
+
+  return {rawVerificationToken, hashVerificationToken}
+}
+
 export {
   generateAccessToken,
   generateRefreshToken,
   hashToken,
   verifyAccessToken,
   verifyRefreshToken,
+  generateVerificationToken
+  
 };

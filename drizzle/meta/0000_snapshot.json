@@ -1,5 +1,5 @@
 {
-  "id": "92d04ca5-2128-40f5-a651-e4d51646f4fc",
+  "id": "31abe76f-8d02-4268-b363-2d3dfa8e340e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -54,8 +54,21 @@
           "notNull": false,
           "default": "'user'"
         },
+        "isDeleted": {
+          "name": "isDeleted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
         "refresh_token": {
           "name": "refresh_token",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "verification_token": {
+          "name": "verification_token",
           "type": "varchar",
           "primaryKey": false,
           "notNull": false

@@ -3,7 +3,8 @@ import ApiError from "../utils/api.error.js";
 import { verifyAccessToken } from "../utils/generate.token.js";
 import db from "../db/index.js";
 import { usersTable } from "../db/schema.js";
-import { eq, type InferSelectModel } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import type { InferSelectModel } from "drizzle-orm";
 
 type User = InferSelectModel<typeof usersTable>;
 type AuthenticatedUser = Pick<
@@ -48,7 +49,13 @@ async function authenticate(req: Request, res: Response, next: NextFunction) {
       updatedAt: usersTable.updatedAt,
     })
     .from(usersTable)
-    .where(eq(usersTable.id, decodedToken.id));
+    .where(
+      and(
+        eq(usersTable.id, decodedToken.id),
+        eq(usersTable.isDeleted, false),
+        eq(usersTable.isVerified, true),
+      ),
+    );
 
   if (!user) {
     throw ApiError.notFound("User account no longer exists");

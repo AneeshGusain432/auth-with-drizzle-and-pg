@@ -15,10 +15,12 @@ import ApiResponse from "../../common/utils/api.response.js";
 import {
   generateAccessToken,
   generateRefreshToken,
+  generateVerificationToken,
   hashToken,
 } from "../../common/utils/generate.token.js";
+import transpoter from "../../common/utils/email.js";
 
-async function register(req:Request, res:Response) {
+async function register(req: Request, res: Response) {
   const body = registerValidationSchema.safeParse(req.body);
 
   if (body.error) {
@@ -26,18 +28,20 @@ async function register(req:Request, res:Response) {
     throw ApiError.badRequest(errors);
   }
 
-  const user = await db
+  const [user] = await db
     .select()
     .from(usersTable)
     .where(eq(usersTable.email, body.data.email));
 
-  if (user.length > 0) {
+  if (user) {
     throw ApiError.conflict(
       `user with this email ${body.data.email} already exist`,
     );
   }
 
   const hashPass = await hashPassword(body.data.password);
+  const { rawVerificationToken, hashVerificationToken } =
+    generateVerificationToken();
 
   const [data] = await db
     .insert(usersTable)
@@ -46,6 +50,7 @@ async function register(req:Request, res:Response) {
       firstName: body.data.firstName,
       lastName: body.data.lastName,
       password: hashPass,
+      verificationToken: hashVerificationToken,
     })
     .returning({
       id: usersTable.id,
@@ -57,10 +62,49 @@ async function register(req:Request, res:Response) {
       updatedAt: usersTable.updatedAt,
     });
 
-  ApiResponse.created(res, "Account created successfully", { user: data });
+  await transpoter.sendMail({
+    from: "test@test.com",
+    to: data?.email,
+    subject: "Please verified your account",
+    html: `  <a href="http://localhost:8000/api/v1/auth/verify-email/${rawVerificationToken}">
+    Verify Email
+  </a>`,
+  });
+
+  ApiResponse.created(
+    res,
+    "Account created successfully. Please verify your email",
+    { user: data },
+  );
 }
 
-async function login(req:Request, res:Response) {
+async function verifyEmail(req: Request, res: Response) {
+  const { token } = req.params;
+
+  if (!token) {
+    ApiError.unauthorized("invalid or expired token");
+  }
+
+  const hashedToken = await hashToken(token as string);
+
+  const [data] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.verificationToken, hashedToken));
+
+  if (!data) {
+    throw ApiError.notFound("Invalid verification link");
+  }
+
+  await db
+    .update(usersTable)
+    .set({ isVerified: true, verificationToken: "" })
+    .where(eq(usersTable.id, data?.id!));
+
+  ApiResponse.ok(res, "Your account has been verified successfully");
+}
+
+async function login(req: Request, res: Response) {
   const body = loginValidationSchema.safeParse(req.body);
 
   if (body.error) {
@@ -75,6 +119,10 @@ async function login(req:Request, res:Response) {
 
   if (!user) {
     throw ApiError.unauthorized("invalid email or password");
+  }
+
+  if (!user.isVerified) {
+    throw ApiError.unauthorized("Please verify your email before logging in");
   }
 
   const isValid = await comparePassword(body.data.password, user.password!);
@@ -122,13 +170,22 @@ async function login(req:Request, res:Response) {
   });
 }
 
+async function logout(req: Request, res: Response) {
+  const user = req.user;
+  await db
+    .update(usersTable)
+    .set({ refreshToken: "" })
+    .where(eq(usersTable.id, user?.id!));
+  res.clearCookie("accessToken").clearCookie("refreshToken");
 
-async function logout(req:Request, res:Response) {
-  const user = req.user
-  await db.update(usersTable).set({refreshToken: ""}).where(eq(usersTable.id, user?.id!))
-  res.clearCookie("accessToken").clearCookie("refreshToken")
-
-  ApiResponse.ok(res, "Logged out successfully")
+  ApiResponse.ok(res, "Logged out successfully");
 }
 
-export { register, login, logout };
+
+async function getMe(req: Request, res: Response) {
+  const user = req.user;
+  ApiResponse.ok(res, "User fetched successfully", { user: user });
+}
+
+
+export { register, login, logout, getMe, verifyEmail };
