@@ -17,6 +17,7 @@ import {
   generateRefreshToken,
   generateVerificationToken,
   hashToken,
+  verifyRefreshToken,
 } from "../../common/utils/generate.token.js";
 import transpoter from "../../common/utils/email.js";
 
@@ -181,11 +182,49 @@ async function logout(req: Request, res: Response) {
   ApiResponse.ok(res, "Logged out successfully");
 }
 
-
 async function getMe(req: Request, res: Response) {
   const user = req.user;
   ApiResponse.ok(res, "User fetched successfully", { user: user });
 }
 
+async function refreshToken(req: Request, res: Response) {
+  const token =
+    req.cookies?.refreshToken || req.headers.authorization?.split(" ")[1];
 
-export { register, login, logout, getMe, verifyEmail };
+  verifyRefreshToken(token);
+  const hashedToken = await hashToken(token);
+
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.refreshToken, hashedToken));
+
+  if (!user) {
+    throw ApiError.unauthorized("Invalid or expired refresh token");
+  }
+
+  const accessToken = generateAccessToken({ id: user.id, role: user.role! });
+  const refreshToken = generateRefreshToken({ id: user.id, role: user.role! });
+  const hashedRefreshToken = await hashToken(refreshToken);
+
+  await db
+    .update(usersTable)
+    .set({ refreshToken: hashedRefreshToken })
+    .where(eq(usersTable.id, user.id));
+
+  res
+    .cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 15 * 60 * 1000,
+    })
+    .cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+  ApiResponse.ok(res, "", { accessToken, refreshToken });
+}
+
+export { register, login, logout, getMe, verifyEmail, refreshToken };

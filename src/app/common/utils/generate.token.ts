@@ -19,7 +19,6 @@ function generateRefreshToken(payload: TokenPayload) {
   });
 }
 
-
 function verifyAccessToken(token: string): TokenPayload {
   try {
     return Jwt.verify(
@@ -42,17 +41,18 @@ function verifyRefreshToken(token: string): TokenPayload {
   }
 }
 
-
 async function hashToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
-
 function generateVerificationToken() {
-  const rawVerificationToken =  crypto.randomBytes(32).toString("hex")
-  const hashVerificationToken =  crypto.createHash("sha256").update(rawVerificationToken).digest("hex")
+  const rawVerificationToken = crypto.randomBytes(32).toString("hex");
+  const hashVerificationToken = crypto
+    .createHash("sha256")
+    .update(rawVerificationToken)
+    .digest("hex");
 
-  return {rawVerificationToken, hashVerificationToken}
+  return { rawVerificationToken, hashVerificationToken };
 }
 
 export {
@@ -61,6 +61,5 @@ export {
   hashToken,
   verifyAccessToken,
   verifyRefreshToken,
-  generateVerificationToken
-  
+  generateVerificationToken,
 };

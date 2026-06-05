@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getMe, login, logout, register, verifyEmail } from "./controller.js";
+import { getMe, login, logout, refreshToken, register, verifyEmail } from "./controller.js";
 import { authenticate } from "../../common/middleware/auth.middleware.js";
 
 const authRouter: Router = Router();
@@ -9,5 +9,6 @@ authRouter.post("/login", login)
 authRouter.post("/logout", authenticate, logout)
 authRouter.get("/get-me", authenticate, getMe)
 authRouter.post("/verify-email/:token", verifyEmail) 
+authRouter.post("/refresh-token", refreshToken)
 
 export default authRouter;
