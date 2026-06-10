@@ -20,6 +20,7 @@ import {
   verifyRefreshToken,
 } from "../../common/utils/generate.token.js";
 import transpoter from "../../common/utils/email.js";
+import imagekit from "../../common/config/imagekit.js";
 
 async function register(req: Request, res: Response) {
   const body = registerValidationSchema.safeParse(req.body);
@@ -227,4 +228,50 @@ async function refreshToken(req: Request, res: Response) {
   ApiResponse.ok(res, "", { accessToken, refreshToken });
 }
 
-export { register, login, logout, getMe, verifyEmail, refreshToken };
+async function uploadAvatar(req: Request, res: Response) {
+  const file = req.file;
+
+  if (!file) {
+    throw ApiError.badRequest("file is required");
+  }
+
+  const uploadedImage = await imagekit.files.upload({
+    file: file.buffer.toString("base64"),
+    fileName: file.originalname,
+    folder: "test",
+  });
+
+  if (!uploadedImage) {
+    throw ApiError.serverError("failed to upload image");
+  }
+
+  const user = await db
+    .update(usersTable)
+    .set({
+      avatarUrl: uploadedImage.url,
+    })
+    .where(eq(usersTable.id, req.user?.id!))
+    .returning({
+      id: usersTable.id,
+      firstName: usersTable.firstName,
+      email: usersTable.email,
+      avatar: usersTable.avatarUrl,
+      role: usersTable.role,
+      isVerified: usersTable.isVerified,
+      lastName: usersTable.lastName,
+      createdAt: usersTable.createdAt,
+      updatedAt: usersTable.updatedAt,
+    });
+
+  ApiResponse.ok(res, "profile image uploaded", { user });
+}
+
+export {
+  register,
+  login,
+  logout,
+  getMe,
+  verifyEmail,
+  refreshToken,
+  uploadAvatar,
+};

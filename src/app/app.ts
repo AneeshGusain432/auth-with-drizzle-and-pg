@@ -5,6 +5,7 @@ import authRouter from "./module/auth/routes.js";
 
 export function createExpressApplication(): Express {
   const app = express();
+  
 
   // middleware
   app.use(express.json())

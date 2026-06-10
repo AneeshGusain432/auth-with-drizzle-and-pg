@@ -2,6 +2,7 @@ import {
   boolean,
   pgEnum,
   pgTable,
+  text,
   timestamp,
   uuid,
   varchar,
@@ -19,6 +20,7 @@ const usersTable = pgTable("users", {
   isVerified: boolean("is_verified").default(false),
 
   password: varchar("password", { length: 100 }),
+  avatarUrl: text("avatar_url"),
 
   role: userRoleEnum("role").default("user"),
   isDeleted: boolean().default(false),
